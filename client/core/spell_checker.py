@@ -1,7 +1,8 @@
 """Small adapter around the Windows spell-checking service.
 
 WinZapp's message editor remains an ordinary ``wx.TextCtrl``. This module
-checks the text after the user appends a word boundary and reports a detected
+checks the text after the user appends a word boundary (a space or a
+punctuation mark) and when the caret arrives at a word, and reports a detected
 error through a callback. It neither changes the message nor exposes custom
 UI Automation text attributes.
 
@@ -15,6 +16,7 @@ from __future__ import annotations
 import os
 import time
 import ctypes
+import unicodedata
 from ctypes import POINTER, c_int, c_ulong, wintypes
 from typing import Callable
 
@@ -374,20 +376,60 @@ def _language_candidates(preferred_language: str | None) -> list[str]:
     return candidates
 
 
+#: Punctuation that sits inside a word ("d'água", "guarda-chuva", "snake_case"):
+#: typing one is not the end of the word, so it must not cue an error.
+_IN_WORD_PUNCTUATION = frozenset("'\u2019\u2018-\u2010\u2011_")
+
+
+def is_word_boundary(char: str) -> bool:
+    """Whether typing ``char`` ends the word before it: any whitespace, and
+    punctuation (comma, full stop, question mark, brackets, quotes...) except
+    the marks that live inside words (apostrophes, hyphens, underscore)."""
+    if not char:
+        return False
+    if char.isspace():
+        return True
+    return (unicodedata.category(char).startswith("P")
+            and char not in _IN_WORD_PUNCTUATION)
+
+
 def _word_ended(previous_text: str, current_text: str) -> bool:
-    """Return whether one trailing whitespace character was just appended.
+    """Return whether one word-ending character (whitespace or punctuation)
+    was just appended right after a word.
 
     Requiring an exact one-character append is important: Backspace can expose
     a space that was already present before the deleted word. Treating that as
     a newly typed boundary would replay the error sound while deleting text.
+    A second boundary in a row (two spaces, ", ", "..") ends no word either.
     """
     return bool(
         current_text
         and len(current_text) == len(previous_text) + 1
         and current_text.startswith(previous_text)
-        and current_text[-1].isspace()
-        and (len(current_text) == 1 or not current_text[-2].isspace())
+        and is_word_boundary(current_text[-1])
+        and (len(current_text) == 1 or not is_word_boundary(current_text[-2]))
     )
+
+
+def caret_index(text: str, native_position: int, newline_width: int = 1) -> int:
+    """Index into ``text`` (what ``GetValue()`` returns) of the caret at
+    ``native_position`` (what ``GetInsertionPoint()`` returns).
+
+    On Windows a multiline edit control counts a line break as two positions
+    (CR LF) while ``GetValue()`` reports it as one character (see the note in
+    ComposerMixin._on_message_field_key_down, issue #48), so the two drift
+    apart by one per line. ``newline_width=2`` accounts for that; a text that
+    already holds CR LF pairs is counted correctly too.
+    """
+    consumed = 0
+    for index, char in enumerate(text):
+        if consumed >= native_position:
+            return index
+        if char == "\n" and newline_width == 2 and (index == 0 or text[index - 1] != "\r"):
+            consumed += 2
+        else:
+            consumed += 1
+    return len(text)
 
 
 class WindowsSpellChecker:
@@ -404,6 +446,9 @@ class WindowsSpellChecker:
         self._checker = None
         self._initialized = False
         self._last_text = ""
+        #: The misspelled word the caret is on, as an (start, end) range, so
+        #: moving inside it does not cue again; None when it is on no error.
+        self._caret_error: "tuple[int, int] | None" = None
 
     def reset(self, text: str = "") -> None:
         """Re-baseline the last-seen text without checking anything.
@@ -417,6 +462,7 @@ class WindowsSpellChecker:
         cues an error for a word the user typed long before.
         """
         self._last_text = text or ""
+        self._caret_error = None
 
     def set_language(self, language: str | None) -> None:
         """Change the preferred language and reopen Windows' checker lazily."""
@@ -517,6 +563,8 @@ class WindowsSpellChecker:
         text = text or ""
         previous_text = self._last_text
         self._last_text = text
+        if text != previous_text:
+            self._caret_error = None  # ranges of the old text mean nothing now
         if not _word_ended(previous_text, text):
             return []
 
@@ -525,3 +573,25 @@ class WindowsSpellChecker:
         if any(start <= previous_character < end for start, end in errors):
             self._play_error_sound()
         return errors
+
+    def caret_moved(self, text: str, index: int) -> bool:
+        """Cue an error when the caret has just arrived at a misspelled word.
+
+        ``index`` is the caret's position in ``text``. A word is "arrived at"
+        the first time the caret is on it (start, inside or end) after being
+        elsewhere, so walking along it character by character cues once, and
+        leaving and coming back cues again. Returns whether the cue played.
+        """
+        text = text or ""
+        landed = next(
+            ((start, end) for start, end in self.errors_for_text(text)
+             if start <= index <= end),
+            None,
+        )
+        if landed == self._caret_error:
+            return False
+        self._caret_error = landed
+        if landed is None:
+            return False
+        self._play_error_sound()
+        return True

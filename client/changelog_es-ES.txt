@@ -78,6 +78,8 @@ MEJORAS
 
 - Se actualizó la biblioteca de WhatsApp que usa WinZapp. Las notas de sus desarrolladores enumeran correcciones para crear grupos, obtener y restablecer enlaces de invitación de grupo, editar la descripción del grupo, cambiar tu nombre de perfil y enviar multimedia en versiones recientes de WhatsApp Web. Si WinZapp te ofrece actualizar WPPConnect al iniciar, acepta para instalar la nueva biblioteca.
 
+- El sonido de error ortográfico ahora también suena cuando escribes un signo de puntuación después de una palabra mal escrita (coma, punto, interrogación y otros, no solo el espacio) y cuando el cursor llega a una palabra mal escrita con las flechas, Ctrl con las flechas, Inicio, Fin o un clic.
+
 CORRECCIONES
 
 - El desinstalador ahora sigue el idioma de visualización de Windows, igual que el instalador, en lugar de aparecer siempre en portugués.

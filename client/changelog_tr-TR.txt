@@ -78,6 +78,8 @@ YENİLİKLER
 
 - WinZapp'ın kullandığı WhatsApp kitaplığı güncellendi. Geliştiricilerinin notları, WhatsApp Web'in son sürümlerinde grup oluşturma, grup davet bağlantısını alma ve sıfırlama, grup açıklamasını düzenleme, profil adını değiştirme ve medya gönderme için düzeltmeler listeliyor. WinZapp başlangıçta WPPConnect'i güncellemeyi önerirse kabul edin; yeni kitaplık böylece kurulur.
 
+- Yazım hatası sesi artık yanlış yazılmış bir kelimeden sonra noktalama işareti yazdığınızda (virgül, nokta, soru işareti ve diğerleri; yalnızca boşluk değil) ve imleç ok tuşları, Ctrl ile ok tuşları, Home, End veya bir tıklamayla yanlış yazılmış bir kelimeye geldiğinde de çalar.
+
 DÜZELTMELER
 
 - Kaldırma programı artık her zaman Portekizce görünmek yerine, kurulum programı gibi Windows görüntüleme dilini izliyor.

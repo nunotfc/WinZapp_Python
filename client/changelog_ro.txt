@@ -78,6 +78,8 @@ NOUTĂȚI
 
 - Biblioteca WhatsApp folosită de WinZapp a fost actualizată. Notele dezvoltatorilor ei enumeră corecții pentru crearea grupurilor, obținerea și resetarea linkurilor de invitație la grup, editarea descrierii grupului, schimbarea numelui de profil și trimiterea fișierelor media în versiunile recente ale WhatsApp Web. Dacă WinZapp vă propune actualizarea WPPConnect la pornire, acceptați-o pentru a instala noua bibliotecă.
 
+- Sunetul de eroare ortografică se aude acum și când tastezi un semn de punctuație după un cuvânt greșit (virgulă, punct, semnul întrebării și altele, nu doar spațiul) și când cursorul ajunge la un cuvânt greșit cu săgețile, Ctrl cu săgețile, Home, End sau un clic.
+
 CORECTĂRI
 
 - Programul de dezinstalare urmează acum limba de afișare a Windows, la fel ca programul de instalare, în loc să apară mereu în portugheză.

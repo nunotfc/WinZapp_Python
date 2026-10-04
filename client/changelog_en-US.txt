@@ -78,6 +78,8 @@ IMPROVEMENTS
 
 - The WhatsApp library WinZapp uses was updated. Its developers' notes list fixes for creating groups, getting and resetting group invite links, editing group descriptions, changing your profile name and uploading media on recent WhatsApp Web versions. If WinZapp offers to update WPPConnect when it starts, accept it so the new library is installed.
 
+- The spelling-error sound now also plays when you type punctuation after a misspelled word (comma, full stop, question mark and so on, not only the space), and when the cursor arrives at a misspelled word with the arrow keys, Ctrl plus the arrow keys, Home, End or a click.
+
 FIXES
 
 - The uninstaller now follows the Windows display language like the installer does, instead of always appearing in Portuguese.

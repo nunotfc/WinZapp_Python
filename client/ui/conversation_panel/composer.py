@@ -6,6 +6,7 @@ ConversationsPanel.__init__/init_UI is available here.
 """
 
 import os
+import sys
 import tempfile
 import threading
 import wx
@@ -20,9 +21,18 @@ from core.utils import (
     to_editor_line_endings,
 )
 from core.spell_checker import (
+    caret_index,
     spell_check_active,
     windows_spellcheck_enabled,
 )
+
+#: Keys that move the caret in the message field. After one of them (alone, with
+#: Ctrl for a word at a time, or with Shift to select) the caret may have
+#: arrived at a misspelled word, which cues the spelling-error sound.
+_CARET_KEYS = frozenset({
+    wx.WXK_LEFT, wx.WXK_RIGHT, wx.WXK_UP, wx.WXK_DOWN,
+    wx.WXK_HOME, wx.WXK_END, wx.WXK_PAGEUP, wx.WXK_PAGEDOWN,
+})
 
 
 class ComposerMixin:
@@ -55,6 +65,27 @@ class ComposerMixin:
     def _play_spelling_error_sound(self):
         """Play the currently configured spelling-error Sound Event."""
         self.main_window.spelling_error_sound.play()
+
+    def _check_spelling_at_caret(self):
+        """Cue the spelling-error sound if the caret has just arrived at a
+        misspelled word. Runs after the native control has moved the caret
+        (wx.CallAfter), never while typing: typing ends a word through
+        on_change_message_field()."""
+        spell_checker = getattr(self, "_spell_checker", None)
+        if spell_checker is None or not self._spell_check_enabled():
+            return
+        try:
+            text = self.message_field.GetValue()
+            position = self.message_field.GetInsertionPoint()
+        except RuntimeError:  # the control went away before this ran
+            return
+        spell_checker.caret_moved(
+            text, caret_index(text, position, 2 if sys.platform == "win32" else 1))
+
+    def _on_message_field_mouse_up(self, event):
+        """A click can put the caret on a misspelled word too."""
+        event.Skip()
+        wx.CallAfter(self._check_spelling_at_caret)
 
     def on_change_message_field(self, event):
         # Don't touch button visibility while recording or staging attachments.
@@ -332,6 +363,8 @@ class ComposerMixin:
             self.message_field.WriteText("\n")
             self.on_change_message_field(None)
             return  # consume — don't send and don't double-insert
+        if kc in _CARET_KEYS:
+            wx.CallAfter(self._check_spelling_at_caret)
         event.Skip()
 
     @staticmethod

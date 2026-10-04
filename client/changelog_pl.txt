@@ -78,6 +78,8 @@ ULEPSZENIA
 
 - Zaktualizowano bibliotekę WhatsApp, z której korzysta WinZapp. W informacjach od jej twórców znajdują się poprawki dotyczące tworzenia grup, pobierania i resetowania linków zaproszenia do grupy, edycji opisu grupy, zmiany nazwy profilu oraz wysyłania mediów w nowszych wersjach WhatsApp Web. Jeśli WinZapp po uruchomieniu zaproponuje aktualizację WPPConnect, zaakceptuj ją, aby zainstalować nową bibliotekę.
 
+- Dźwięk błędu pisowni odtwarza się teraz także po wpisaniu znaku interpunkcyjnego po błędnym słowie (przecinek, kropka, pytajnik i inne, nie tylko spacja) oraz gdy kursor trafi na błędne słowo za pomocą strzałek, Ctrl ze strzałkami, Home, End lub kliknięcia.
+
 POPRAWKI
 
 - Program odinstalowujący używa teraz języka wyświetlania systemu Windows, tak jak instalator, zamiast zawsze pojawiać się po portugalsku.
